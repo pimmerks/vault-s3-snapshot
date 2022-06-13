@@ -7,10 +7,10 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/Lucretius/vault_raft_snapshot_agent/config"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/pimmerks/vault-s3-snapshot/config"
 )
 
 // CreateS3Snapshot writes snapshot to s3 location

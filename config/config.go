@@ -16,26 +16,12 @@ type Configuration struct {
 	Frequency       string      `json:"frequency"`
 	AWS             S3Config    `json:"aws_storage"`
 	Local           LocalConfig `json:"local_storage"`
-	GCP             GCPConfig   `json:"google_storage"`
-	Azure           AzureConfig `json:"azure_storage"`
 	RoleID          string      `json:"role_id"`
 	SecretID        string      `json:"secret_id"`
 	Approle         string      `json:"approle"`
 	K8sAuthRole     string      `json:"k8s_auth_role,omitempty"`
 	K8sAuthPath     string      `json:"k8s_auth_path,omitempty"`
 	VaultAuthMethod string      `json:"vault_auth_method,omitempty"`
-}
-
-// AzureConfig is the configuration for Azure blob snapshots
-type AzureConfig struct {
-	AccountName   string `json:"account_name"`
-	AccountKey    string `json:"account_key"`
-	ContainerName string `json:"container_name"`
-}
-
-// GCPConfig is the configuration for GCP Storage snapshots
-type GCPConfig struct {
-	Bucket string `json:"bucket"`
 }
 
 // LocalConfig is the configuration for local snapshots

@@ -8,8 +8,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/Lucretius/vault_raft_snapshot_agent/config"
-	"github.com/Lucretius/vault_raft_snapshot_agent/snapshot_agent"
+	"github.com/pimmerks/vault-s3-snapshot/config"
+	"github.com/pimmerks/vault-s3-snapshot/snapshot_agent"
 )
 
 func listenForInterruptSignals() chan bool {
@@ -75,14 +75,6 @@ func main() {
 			if c.AWS.Bucket != "" {
 				snapshotPath, err := snapshotter.CreateS3Snapshot(&snapshot, c, now)
 				logSnapshotError("aws", snapshotPath, err)
-			}
-			if c.GCP.Bucket != "" {
-				snapshotPath, err := snapshotter.CreateGCPSnapshot(&snapshot, c, now)
-				logSnapshotError("gcp", snapshotPath, err)
-			}
-			if c.Azure.ContainerName != "" {
-				snapshotPath, err := snapshotter.CreateAzureSnapshot(&snapshot, c, now)
-				logSnapshotError("azure", snapshotPath, err)
 			}
 		}
 		select {

@@ -9,7 +9,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/Lucretius/vault_raft_snapshot_agent/config"
+	"github.com/pimmerks/vault-s3-snapshot/config"
 )
 
 // CreateLocalSnapshot writes snapshot to disk location
