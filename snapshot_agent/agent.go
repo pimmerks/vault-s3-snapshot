@@ -7,8 +7,6 @@ import (
 	"path"
 	"time"
 
-	"cloud.google.com/go/storage"
-	"github.com/Azure/azure-storage-blob-go/azblob"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -22,8 +20,6 @@ type Snapshotter struct {
 	API             *vaultApi.Client
 	Uploader        *s3manager.Uploader
 	S3Client        *s3.S3
-	GCPBucket       *storage.BucketHandle
-	AzureUploader   azblob.ContainerURL
 	TokenExpiration time.Time
 }
 
