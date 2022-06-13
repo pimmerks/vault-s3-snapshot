@@ -1,6 +1,7 @@
 package snapshot_agent
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"log"
@@ -12,6 +13,21 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/pimmerks/vault-s3-snapshot/config"
 )
+
+type S3SnapshotWriter struct {
+	Path string
+}
+
+func CreateS3SnapshotWriter(config *config.Configuration) SnapshotWriter {
+	snapshotter := &S3SnapshotWriter{}
+	return snapshotter
+}
+
+func (w S3SnapshotWriter) WriteSnapshot(buf *bytes.Buffer, currentTs int64) (succes bool, error error) {
+	return false, nil
+}
+
+// OLD:
 
 // CreateS3Snapshot writes snapshot to s3 location
 func (s *Snapshotter) CreateS3Snapshot(reader io.ReadWriter, config *config.Configuration, currentTs int64) (string, error) {

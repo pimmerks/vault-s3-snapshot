@@ -4,24 +4,25 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"log"
-	"os"
 
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/pimmerks/vault-s3-snapshot/config/enums"
 )
 
 // Configuration is the overall config object
 type Configuration struct {
-	Address         string      `json:"addr"`
-	Retain          int64       `json:"retain"`
-	Frequency       string      `json:"frequency"`
-	AWS             S3Config    `json:"aws_storage"`
-	Local           LocalConfig `json:"local_storage"`
-	RoleID          string      `json:"role_id"`
-	SecretID        string      `json:"secret_id"`
-	Approle         string      `json:"approle"`
-	K8sAuthRole     string      `json:"k8s_auth_role,omitempty"`
-	K8sAuthPath     string      `json:"k8s_auth_path,omitempty"`
-	VaultAuthMethod string      `json:"vault_auth_method,omitempty"`
+	Address         string                `json:"addr"`
+	Retain          int64                 `json:"retain"`
+	Frequency       string                `json:"frequency"`
+	AWS             S3Config              `json:"aws_storage"`
+	Local           LocalConfig           `json:"local_storage"`
+	RoleID          string                `json:"role_id"`
+	SecretID        string                `json:"secret_id"`
+	Approle         string                `json:"approle"`
+	Token           string                `json:"token"`
+	K8sAuthRole     string                `json:"k8s_auth_role,omitempty"`
+	K8sAuthPath     string                `json:"k8s_auth_path,omitempty"`
+	VaultAuthMethod enums.VaultAuthMethod `json:"vault_auth_method,omitempty"`
 }
 
 // LocalConfig is the configuration for local snapshots
@@ -44,19 +45,19 @@ type S3Config struct {
 }
 
 // ReadConfig reads the configuration file
-func ReadConfig() (*Configuration, error) {
-	file := "/etc/vault.d/snapshot.json"
-	if len(os.Args) > 1 {
-		file = os.Args[1]
-	}
+func ReadConfig(configPath string) (*Configuration, error) {
+	file := configPath
+
 	cBytes, err := ioutil.ReadFile(file)
 	if err != nil {
 		log.Fatalf("Cannot read configuration file: %v", err.Error())
 	}
+
 	c := &Configuration{}
 	err = json.Unmarshal(cBytes, &c)
 	if err != nil {
 		log.Fatalf("Cannot parse configuration file: %v", err.Error())
 	}
+
 	return c, nil
 }

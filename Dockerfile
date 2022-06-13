@@ -16,11 +16,12 @@ RUN go build \
         -trimpath \
         -ldflags "-s -w -extldflags '-static'" \
         -tags 'osusergo netgo static_build' \
-        -o ../vault_raft_snapshot_agent \
+        -o /build/out/vault-s3-snapshot \
         ./main.go
 
 FROM alpine
+
 WORKDIR /
-COPY --from=builder /vault_raft_snapshot_agent .
-COPY snapshot.json /etc/vault.d/snapshot.json
-ENTRYPOINT ["/vault_raft_snapshot_agent"]
+COPY --from=builder /build/out/vault-s3-snapshot /vault-s3-snapshot
+
+ENTRYPOINT ["/vault-s3-snapshot"]

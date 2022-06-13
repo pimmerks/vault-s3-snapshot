@@ -1,3 +1,5 @@
+.git/
+
 # Binaries for programs and plugins
 *.exe
 *.exe~
@@ -15,5 +17,3 @@
 # vendor/
 local/*
 main
-
-vault/data/

@@ -1,4 +1,5 @@
-![Build](https://github.com/Lucretius/vault_raft_snapshot_agent/workflows/Build/badge.svg?branch=master)
+![Build](https://github.com/pimmerks/vault-s3-snapshot/workflows/Build/badge.svg?branch=master)
+![CodeQL](https://github.com/pimmerks/vault-s3-snapshot/workflows/CodeQL/badge.svg?branch=master)
 
 # Raft Snapshot Agent
 

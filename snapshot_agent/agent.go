@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	vaultApi "github.com/hashicorp/vault/api"
 	"github.com/pimmerks/vault-s3-snapshot/config"
+	"github.com/pimmerks/vault-s3-snapshot/config/enums"
 )
 
 type Snapshotter struct {
@@ -23,14 +24,14 @@ type Snapshotter struct {
 	TokenExpiration time.Time
 }
 
-func NewSnapshotter(config *config.Configuration) (*Snapshotter, error) {
+func NewSnapshotter(configuration *config.Configuration) (*Snapshotter, error) {
 	snapshotter := &Snapshotter{}
-	err := snapshotter.ConfigureVaultClient(config)
+	err := snapshotter.ConfigureVaultClient(configuration)
 	if err != nil {
 		return nil, err
 	}
-	if config.AWS.Bucket != "" {
-		err = snapshotter.ConfigureS3(config)
+	if configuration.AWS.Bucket != "" {
+		err = snapshotter.ConfigureS3(configuration)
 		if err != nil {
 			return nil, err
 		}
@@ -52,10 +53,17 @@ func (s *Snapshotter) ConfigureVaultClient(config *config.Configuration) error {
 		return err
 	}
 	s.API = api
-	if config.VaultAuthMethod == "k8s" {
+
+	switch config.VaultAuthMethod {
+	case enums.Token:
+		return s.SetClientTokenFromConfig(config)
+	case enums.Kubernetes:
 		return s.SetClientTokenFromK8sAuth(config)
+	case enums.AppRole:
+		return s.SetClientTokenFromAppRole(config)
 	}
-	return s.SetClientTokenFromAppRole(config)
+
+	return fmt.Errorf("unknown vault auth method '%v'", config.VaultAuthMethod)
 }
 
 func (s *Snapshotter) SetClientTokenFromAppRole(config *config.Configuration) error {
@@ -110,6 +118,12 @@ func (s *Snapshotter) SetClientTokenFromK8sAuth(config *config.Configuration) er
 
 	s.API.SetToken(result.Auth.ClientToken)
 	s.TokenExpiration = time.Now().Add(time.Duration((time.Second * time.Duration(result.Auth.LeaseDuration)) / 2))
+	return nil
+}
+
+func (s *Snapshotter) SetClientTokenFromConfig(config *config.Configuration) error {
+	s.API.SetToken(config.Token)
+	s.TokenExpiration = time.Now().Add(time.Duration((time.Second * 60 * 60 * 24 * 365)))
 	return nil
 }
 

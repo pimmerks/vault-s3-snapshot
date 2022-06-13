@@ -2,33 +2,24 @@ package main
 
 import (
 	"bytes"
+	"flag"
 	"log"
-	"os"
-	"os/signal"
-	"syscall"
 	"time"
 
 	"github.com/pimmerks/vault-s3-snapshot/config"
 	"github.com/pimmerks/vault-s3-snapshot/snapshot_agent"
 )
 
-func listenForInterruptSignals() chan bool {
-	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-	done := make(chan bool, 1)
-
-	go func() {
-		_ = <-sigs
-		done <- true
-	}()
-	return done
-}
-
 func main() {
-	done := listenForInterruptSignals()
+	configPath := flag.String("config", "", "The path to the config file (in json)")
+	flag.Parse()
 
-	log.Println("Reading configuration...")
-	c, err := config.ReadConfig()
+	if *configPath == "" {
+		log.Fatalln("Please provide a config path (--config /path/to/config.json).")
+	}
+
+	log.Printf("Reading configuration from '%v'\n", *configPath)
+	c, err := config.ReadConfig(*configPath)
 
 	if err != nil {
 		log.Fatalln("Configuration could not be found")
@@ -37,11 +28,6 @@ func main() {
 	snapshotter, err := snapshot_agent.NewSnapshotter(c)
 	if err != nil {
 		log.Fatalln("Cannot instantiate snapshotter.", err)
-	}
-	frequency, err := time.ParseDuration(c.Frequency)
-
-	if err != nil {
-		frequency = time.Hour
 	}
 
 	for {
@@ -61,27 +47,23 @@ func main() {
 		leaderIsSelf := leader.IsSelf
 		if !leaderIsSelf {
 			log.Println("Not running on leader node, skipping.")
-		} else {
-			var snapshot bytes.Buffer
-			err := snapshotter.API.Sys().RaftSnapshot(&snapshot)
-			if err != nil {
-				log.Fatalln("Unable to generate snapshot", err.Error())
-			}
-			now := time.Now().UnixNano()
-			if c.Local.Path != "" {
-				snapshotPath, err := snapshotter.CreateLocalSnapshot(&snapshot, c, now)
-				logSnapshotError("local", snapshotPath, err)
-			}
-			if c.AWS.Bucket != "" {
-				snapshotPath, err := snapshotter.CreateS3Snapshot(&snapshot, c, now)
-				logSnapshotError("aws", snapshotPath, err)
-			}
 		}
-		select {
-		case <-time.After(frequency):
-			continue
-		case <-done:
-			os.Exit(1)
+
+		var snapshot bytes.Buffer
+		err = snapshotter.API.Sys().RaftSnapshot(&snapshot)
+		if err != nil {
+			log.Fatalln("Unable to generate snapshot", err.Error())
+		}
+
+		now := time.Now().UnixNano()
+		if c.Local.Path != "" {
+			snapshotPath, err := snapshotter.CreateLocalSnapshot(&snapshot, c, now)
+			logSnapshotError("local", snapshotPath, err)
+		}
+
+		if c.AWS.Bucket != "" {
+			snapshotPath, err := snapshotter.CreateS3Snapshot(&snapshot, c, now)
+			logSnapshotError("aws", snapshotPath, err)
 		}
 	}
 }

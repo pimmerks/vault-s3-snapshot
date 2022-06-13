@@ -1,0 +1,14 @@
+{
+    "addr": "http://127.0.0.1:8200",
+    "retain": 72,
+    "frequency": "3600s",
+    "token": "hvs.xUaDlfjh6oyHyJHKDobHd5Eg",
+    "role_id": "<vault app role id>",
+    "secret_id": "<vault app secret id",
+    "vault_auth_method": "token",
+    "vault_auth_role": "",
+    "vault_auth_path": "",
+    "local_storage": {
+        "path": "/tmp/"
+    }
+}
