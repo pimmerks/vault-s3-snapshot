@@ -7,6 +7,9 @@
    "vault_auth_method": "",
    "vault_auth_role": "",
    "vault_auth_path": "",
+   "local_storage": {
+      "path": "/tmp"
+   },
    "aws_storage":{
       "access_key_id":"<s3 access id>",
       "secret_access_key":"<s3 acess key>",

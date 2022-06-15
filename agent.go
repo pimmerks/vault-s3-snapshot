@@ -1,4 +1,4 @@
-package snapshot_agent
+package main
 
 import (
 	"errors"

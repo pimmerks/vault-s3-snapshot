@@ -1,13 +1,13 @@
 package main
 
 import (
-	"bytes"
 	"flag"
 	"log"
-	"time"
 
+	"github.com/pimmerks/vault-s3-snapshot/auth"
 	"github.com/pimmerks/vault-s3-snapshot/config"
-	"github.com/pimmerks/vault-s3-snapshot/snapshot_agent"
+	"github.com/pimmerks/vault-s3-snapshot/config/enums"
+	"github.com/pimmerks/vault-s3-snapshot/writer"
 )
 
 func main() {
@@ -25,46 +25,59 @@ func main() {
 		log.Fatalln("Configuration could not be found")
 	}
 
-	snapshotter, err := snapshot_agent.NewSnapshotter(c)
-	if err != nil {
-		log.Fatalln("Cannot instantiate snapshotter.", err)
+	var authenticator auth.VaultAuthenticator
+	switch c.VaultAuthMethod {
+	case enums.Token:
+		authenticator = auth.CreateTokenAuth(c)
+	default:
+		log.Fatalln("Please specify the Vault auth method")
 	}
 
-	for {
-		if snapshotter.TokenExpiration.Before(time.Now()) {
-			switch c.VaultAuthMethod {
-			case "k8s":
-				snapshotter.SetClientTokenFromK8sAuth(c)
-			default:
-				snapshotter.SetClientTokenFromAppRole(c)
-			}
-		}
-		leader, err := snapshotter.API.Sys().Leader()
-		if err != nil {
-			log.Println(err.Error())
-			log.Fatalln("Unable to determine leader instance.  The snapshot agent will only run on the leader node.  Are you running this daemon on a Vault instance?")
-		}
-		leaderIsSelf := leader.IsSelf
-		if !leaderIsSelf {
-			log.Println("Not running on leader node, skipping.")
-		}
+	log.Printf("Using authenticator '%v'\n", authenticator.GetType())
 
-		var snapshot bytes.Buffer
-		err = snapshotter.API.Sys().RaftSnapshot(&snapshot)
-		if err != nil {
-			log.Fatalln("Unable to generate snapshot", err.Error())
-		}
+	// snapshotter, err := snapshot_agent.NewSnapshotter(c)
+	// if err != nil {
+	// 	log.Fatalln("Cannot instantiate snapshotter.", err)
+	// }
 
-		now := time.Now().UnixNano()
-		if c.Local.Path != "" {
-			snapshotPath, err := snapshotter.CreateLocalSnapshot(&snapshot, c, now)
-			logSnapshotError("local", snapshotPath, err)
-		}
+	// if snapshotter.TokenExpiration.Before(time.Now()) {
+	// 	switch c.VaultAuthMethod {
+	// 	case "k8s":
+	// 		snapshotter.SetClientTokenFromK8sAuth(c)
+	// 	default:
+	// 		snapshotter.SetClientTokenFromAppRole(c)
+	// 	}
+	// }
+	// leader, err := snapshotter.API.Sys().Leader()
+	// if err != nil {
+	// 	log.Println(err.Error())
+	// 	log.Fatalln("Unable to determine leader instance.  The snapshot agent will only run on the leader node.  Are you running this daemon on a Vault instance?")
+	// }
+	// leaderIsSelf := leader.IsSelf
+	// if !leaderIsSelf {
+	// 	log.Println("Not running on leader node, skipping.")
+	// }
 
-		if c.AWS.Bucket != "" {
-			snapshotPath, err := snapshotter.CreateS3Snapshot(&snapshot, c, now)
-			logSnapshotError("aws", snapshotPath, err)
-		}
+	// var snapshot bytes.Buffer
+	// err = snapshotter.API.Sys().RaftSnapshot(&snapshot)
+	// if err != nil {
+	// 	log.Fatalln("Unable to generate snapshot", err.Error())
+	// }
+
+	writers := []writer.SnapshotWriter{}
+
+	if c.Local.Path != "" {
+		writers = append(writers, writer.CreateLocalPathSnapshotWriter(c))
+	}
+
+	if c.AWS.Bucket != "" {
+		writers = append(writers, writer.CreateS3SnapshotWriter(c))
+	}
+
+	// now := time.Now().UnixNano()
+	for _, v := range writers {
+		log.Printf("Starting snapshot writer %v\n", v.GetType())
+		// v.WriteSnapshot(&snapshot, now)
 	}
 }
 

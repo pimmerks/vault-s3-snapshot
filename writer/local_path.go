@@ -1,4 +1,4 @@
-package snapshot_agent
+package writer
 
 import (
 	"bytes"
@@ -23,6 +23,10 @@ func CreateLocalPathSnapshotWriter(config *config.Configuration) SnapshotWriter 
 	snapshotter.Path = config.Local.Path
 	snapshotter.Retain = config.Retain
 	return snapshotter
+}
+
+func (w LocalPathSnapshotWriter) GetType() string {
+	return "Local Path"
 }
 
 func (w LocalPathSnapshotWriter) WriteSnapshot(buf *bytes.Buffer, currentTs int64) (succes bool, error error) {
