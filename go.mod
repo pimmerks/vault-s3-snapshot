@@ -3,7 +3,7 @@ module github.com/pimmerks/vault-s3-snapshot
 go 1.18
 
 require (
-	github.com/aws/aws-sdk-go v1.44.34
+	github.com/aws/aws-sdk-go v1.44.56
 	github.com/hashicorp/vault/api v1.7.2
 )
 
